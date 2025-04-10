@@ -1314,7 +1314,7 @@ def cardinalNumToCardinalWord(n: int):
     """
     try:
         n = int(str(n).strip())
-        return convert_numeric_representation(n, "CardinalNumber", "CardinalWord")
+        return _convert_numeric_representation(n, "CardinalNumber", "CardinalWord")
     except (ValueError, TypeError):
         return None
 
@@ -1337,7 +1337,7 @@ def cardinalNumToOrdinalWord(n: int):
     """
     try:
         n = int(str(n).strip())
-        return convert_numeric_representation(n, "CardinalNumber", "OrdinalWord")
+        return _convert_numeric_representation(n, "CardinalNumber", "OrdinalWord")
     except (ValueError, TypeError):
         return None
 
@@ -1360,7 +1360,7 @@ def cardinalNumToOrdinalNum(n: int):
     """
     try:
         n = int(str(n).strip())
-        return convert_numeric_representation(n, "CardinalNumber", "OrdinalNumber")
+        return _convert_numeric_representation(n, "CardinalNumber", "OrdinalNumber")
     except (ValueError, TypeError):
         return None
 
