@@ -24,6 +24,8 @@ from typing import Literal, Union, Optional
 from functools import reduce
 
 
+Rep = Literal["CardinalWord", "CardinalNumber", "OrdinalWord", "OrdinalNumber"]
+NumLike = Union[int, str]
 
 ## Module-Level Constants & Dictionaries
 ##━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -849,20 +851,19 @@ def intToWords(n: Union[int, float], thousands_sep: bool = False):
 
         return f"{whole_part} point {decimal_words}"
 
-    n_str = str(n)
-    if "." in n_str:
-        try:
-            float_val = float(n_str)
-            return _from_float(float_val)
-        except ValueError:
-            return None
-    else:
-        try:
-            int_val = int(n_str)
-            return _from_int(int_val)
-        except ValueError:
-            return None
+    try:
+        # Clean up the input
+        n_str = str(n).strip()
 
+        # Handle float if decimal point exists
+        if "." in n_str:
+            return _from_float(float(n_str))
+        else:
+            return _from_int(int(n_str))
+
+    except (ValueError, TypeError):
+        return None
+       
 
 # INTEGER TO WORD-BASED NUMBER: CONVERT INTEGER VALUES (E.G., 21) TO ORDINAL NUMBERS IN WORD FORM (E.G., "TWENTY-FIRST")
 #───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -886,6 +887,11 @@ def intToOrdinalWords(n: int):
         str or None: The ordinal representation of the number as a string, 
                      or None if conversion fails.
     """
+    try:
+        n = int(str(n).strip())
+    except (ValueError, TypeError):
+        return None    
+    
     words = intToWords(n, thousands_sep=False)
     if not words:
         return None
@@ -957,6 +963,11 @@ def ordinalSuffix(n: int):
     ──────────────────────────       	
         str: The appropriate ordinal suffix ('st', 'nd', 'rd', or 'th').
     """
+    try:
+        n = int(str(n).strip())
+    except (ValueError, TypeError):
+        return None    
+    
     last_two = abs(n) % 100
     last_digit = abs(n) % 10
     if last_two in (11, 12, 13):
@@ -1141,8 +1152,348 @@ def romanToWords(s: str):
 
 
 
+## Low‑Level Helpers
+##━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def _cardinal_number_to_ordinal_number(n: int) -> str:
+    """ 2 -> '2nd'  """
+    return f"{n}{ordinalSuffix(n)}"
+
+def _ensure_int(x: NumLike) -> int:
+    """ Accepts int, str‑digit or str‑ordinal‑digit and returns int. """
+    if isinstance(x, int):
+        return x
+    
+    if str(x).isdigit(): # try plain digits first
+        return int(x)
+    
+    maybe = stringToInt(str(x)) # try ordinal digits: '2nd' -> 2
+    if maybe is None:
+        # raise ValueError(f"Cannot coerce {x!r} to integer.")
+        return None       
+    return maybe
+
+
+# Dispatcher
+# ────────────────────────────────────────────────────────────────────────────────
+def _convert_numeric_representation(
+    value: NumLike,
+    from_rep: Rep,
+    to_rep:   Rep
+) -> NumLike:
+    """
+    Convert *value* from one numeric representation to another.
+
+    Parameters
+    ----------
+    value : int | str
+        The literal to convert (e.g. "two", 2, "second", "2nd").
+    from_rep : {"CardinalWord","CardinalNumber","OrdinalWord","OrdinalNumber"}
+        Code for the input representation.
+    to_rep   : {"CardinalWord","CardinalNumber","OrdinalWord","OrdinalNumber"}
+        Code for the desired output representation.
+
+    Returns
+    -------
+    int | str
+        Converted value in the requested form.
+    """
+    if from_rep == to_rep:
+        return value  # no‑op
+
+    # ─── step 1: normalise input to an *integer* ───────────────────────────────
+    if from_rep == "CardinalWord":                        # "two"  -> 2
+        base_int = wordsToInt(str(value))
+    elif from_rep == "CardinalNumber":                      # 2      -> 2
+        base_int = _ensure_int(value)
+    elif from_rep == "OrdinalWord":                      # "second" -> 2
+        base_int = ordinalWordsToInt(str(value), to_num=True)
+    elif from_rep == "OrdinalNumber":                      # "2nd"  -> 2
+        base_int = _ensure_int(value)
+    else:
+        # raise ValueError(f"Unknown from_rep {from_rep!r}")
+        return None        
+
+    if base_int is None:
+        # raise ValueError(f"Could not interpret {value!r} as {from_rep}")
+        return None
+
+    # ─── step 2: materialise requested representation ─────────────────────────
+    if to_rep == "CardinalWord":                          # 2 -> "two"
+        return intToWords(base_int)
+    elif to_rep == "CardinalNumber":                        # 2 -> 2
+        return base_int
+    elif to_rep == "OrdinalWord":                        # 2 -> "second"
+        return intToOrdinalWords(base_int)
+    elif to_rep == "OrdinalNumber":                        # 2 -> "2nd"
+        return _cardinal_number_to_ordinal_number(base_int)
+
+    # raise ValueError(f"Unknown to_rep {to_rep!r}")
+    return None    
+
+
+
+
+# FROM CARDINAL WORD: (E.G., "SEVEN")  
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+def cardinalWordToCardinalNum(s: str):
+    """
+    Converts a cardinal number expressed in words into its numeric form.
+
+    This function takes a spelled-out cardinal number (e.g., "two", "fifty") and 
+    returns its corresponding integer representation (e.g., 2, 50).
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - A cardinal number in word form (e.g., "three", "twenty-one").
+
+    Returns:
+    ──────────────────────────
+    - (*int | None*):  
+      - The equivalent integer, or `None` if the input is invalid.
+    """
+    return _convert_numeric_representation(s, "CardinalWord", "CardinalNumber")
+
+def cardinalWordToOrdinalWord(s: str):
+    """
+    Converts a cardinal word into its ordinal word equivalent.
+
+    This function takes a cardinal number in word form (e.g., "two") and returns 
+    the corresponding ordinal word (e.g., "second").
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - A valid cardinal word (e.g., "four", "eleven").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The ordinal word form, or `None` if the input is invalid.
+    """
+    return _convert_numeric_representation(s, "CardinalWord", "OrdinalWord")
+
+def cardinalWordToOrdinalNum(s: str):
+    """
+    Converts a cardinal word into its ordinal number form with a suffix.
+
+    This function returns a string with the appropriate ordinal suffix 
+    (e.g., "2nd", "21st") corresponding to a spelled-out cardinal number.
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - A cardinal number in word form (e.g., "five", "twenty").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The ordinal number with suffix, or `None` if parsing fails.
+    """
+    return _convert_numeric_representation(s, "CardinalWord", "OrdinalNumber")
+
+
+# FROM CARDINAL NUMBER: (E.G., "7")  
+# ────────────────────────────────────────────────────────────────────────────────
+def cardinalNumToCardinalWord(n: int):
+    """
+    Converts a cardinal number into its spelled-out English word form.
+
+    This function accepts either an integer or a numeric string (e.g., 2 or "2") 
+    and returns the equivalent cardinal word (e.g., "two").
+
+    Parameters:
+    ──────────────────────────
+    - n (*int | str*):  
+      - A cardinal number as an integer or numeric string.
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The word form of the number, or `None` if input is invalid.
+    """
+    try:
+        n = int(str(n).strip())
+        return convert_numeric_representation(n, "CardinalNumber", "CardinalWord")
+    except (ValueError, TypeError):
+        return None
+
+def cardinalNumToOrdinalWord(n: int):
+    """
+    Converts a cardinal number into its ordinal word equivalent.
+
+    Accepts a numeric value or string (e.g., 3 or "3") and returns 
+    the corresponding ordinal word (e.g., "third").
+
+    Parameters:
+    ──────────────────────────
+    - n (*int | str*):  
+      - A cardinal number as an integer or string.
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The ordinal word form, or `None` if conversion fails.
+    """
+    try:
+        n = int(str(n).strip())
+        return convert_numeric_representation(n, "CardinalNumber", "OrdinalWord")
+    except (ValueError, TypeError):
+        return None
+
+def cardinalNumToOrdinalNum(n: int):
+    """
+    Converts a cardinal number into its ordinal numeric form with a suffix.
+
+    Converts either a number or numeric string (e.g., 2 or "2") to its 
+    ordinal string representation (e.g., "2nd").
+
+    Parameters:
+    ──────────────────────────
+    - n (*int | str*):  
+      - A cardinal number as integer or string.
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The formatted ordinal number, or `None` if input is invalid.
+    """
+    try:
+        n = int(str(n).strip())
+        return convert_numeric_representation(n, "CardinalNumber", "OrdinalNumber")
+    except (ValueError, TypeError):
+        return None
+
+# FROM ORDINAL WORD: (E.G., "SEVENTH")  
+# ────────────────────────────────────────────────────────────────────────────────
+def ordinalWordToCardinalWord(s: str):
+    """
+    Converts an ordinal word into its cardinal word form.
+
+    This function transforms an ordinal descriptor (e.g., "fourth") into the 
+    corresponding cardinal word (e.g., "four").
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - An ordinal word (e.g., "first", "ninth", "twentieth").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The cardinal word equivalent, or `None` if parsing fails.
+    """
+    return _convert_numeric_representation(s, "OrdinalWord", "CardinalWord")
+
+def ordinalWordToCardinalNum(s: str):
+    """
+    Converts an ordinal word into a cardinal number.
+
+    This function takes an ordinal word (e.g., "seventh") and returns its 
+    numeric form (e.g., 7).
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - An ordinal word (e.g., "second", "fourteenth").
+
+    Returns:
+    ──────────────────────────
+    - (*int | None*):  
+      - The cardinal number value, or `None` if conversion fails.
+    """
+    return _convert_numeric_representation(s, "OrdinalWord", "CardinalNumber")
+
+def ordinalWordToOrdinalNum(s: str):
+    """
+    Converts an ordinal word into an ordinal number with suffix.
+
+    This function returns the numeric ordinal representation 
+    (e.g., "first" → "1st").
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - An ordinal word (e.g., "eighth", "thirtieth").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The formatted ordinal number, or `None` if invalid.
+    """
+    return _convert_numeric_representation(s, "OrdinalWord", "OrdinalNumber")
+
+
+# FROM ORDINAL NUMBER: (E.G., "7TH")  
+# ────────────────────────────────────────────────────────────────────────────────
+def ordinalNumToCardinalWord(s: str):
+    """
+    Converts an ordinal number (with suffix) into its cardinal word equivalent.
+
+    This function transforms an ordinal numeral (e.g., "3rd") into a cardinal 
+    word (e.g., "three").
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - A string with an ordinal number and suffix (e.g., "2nd", "11th").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The cardinal word form, or `None` if parsing fails.
+    """
+    return _convert_numeric_representation(s, "OrdinalNumber", "CardinalWord")
+
+def ordinalNumToCardinalNum(s: str):
+    """
+    Converts an ordinal number (with suffix) into its integer form.
+
+    This function strips the suffix and returns the numeric value 
+    (e.g., "5th" → 5).
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - An ordinal number string (e.g., "1st", "22nd").
+
+    Returns:
+    ──────────────────────────
+    - (*int | None*):  
+      - The cardinal integer value, or `None` if invalid.
+    """
+    return _convert_numeric_representation(s, "OrdinalNumber", "CardinalNumber")
+
+def ordinalNumToOrdinalWord(s: str):
+    """
+    Converts an ordinal number with suffix into its word representation.
+
+    This function maps numeric ordinal forms (e.g., "2nd") to word-based 
+    ordinals (e.g., "second").
+
+    Parameters:
+    ──────────────────────────
+    - s (*str*):  
+      - A formatted ordinal number string (e.g., "3rd", "10th").
+
+    Returns:
+    ──────────────────────────
+    - (*str | None*):  
+      - The corresponding ordinal word, or `None` if invalid.
+    """
+    return _convert_numeric_representation(s, "OrdinalNumber", "OrdinalWord")
+
+
+
+
+
+
+
+
 __all__ = [
-    # "replaceNumericValue",      
+    # "replaceNumericValue",    
+    
+    # Core Conversion Functions
     "wordsToInt",
     "ordinalSuffix",
     "intToWords",
@@ -1152,9 +1503,23 @@ __all__ = [
     "stringToInt",
     "extractNumericValue",
     "romanToWords",
-    "romanToInt",    
-    "insertSep",    
-    "formatDecimal",        
+    "romanToInt",
+    "insertSep",
+    "formatDecimal",
+
+    # Cross-Type Conversion Lambdas
+    "cardinalWordToCardinalNum",
+    "cardinalWordToOrdinalWord",
+    "cardinalWordToOrdinalNum",
+    "cardinalNumToCardinalWord",
+    "cardinalNumToOrdinalWord",
+    "cardinalNumToOrdinalNum",
+    "ordinalWordToCardinalWord",
+    "ordinalWordToCardinalNum",
+    "ordinalWordToOrdinalNum",
+    "ordinalNumToCardinalWord",
+    "ordinalNumToCardinalNum",
+    "ordinalNumToOrdinalWord",
 ]
 
 
@@ -1168,13 +1533,4 @@ __all__ = [
 
 
 
-
-
-
-
-
-
-
-
-
-
+  
