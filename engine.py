@@ -1723,11 +1723,11 @@ class __NumericConverter:
         s = str(value).strip().lower()
         
         # 1. ordinal number (e.g. "21st")
-        if cls._ORD_SUFFIX_RE.match(s):
+        if _ORD_SUFFIX_RE.match(s):
             return "Ordinal Number"
         
         # 2. cardinal number (all digits)
-        if cls._DIGIT_ONLY_RE.match(s):
+        if _DIGIT_ONLY_RE.match(s):
             return "Cardinal Number"
         
         # 3. spelled-out ordinal word?
