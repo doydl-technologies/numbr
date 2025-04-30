@@ -1,27 +1,104 @@
 # -*- coding: utf-8 -*-
 
 #
-# Understanding Number Terminology
-# ─────────────────────────────────
-# ┍━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┑
-# │ Example │              Type             │                             Description                              │
-# ┝━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┥
-# │   four  │  Cardinal number (word form)  │           This is the written-out version of the number 4.           │
-# │    4    │ Cardinal numeral (digit form) │           This is the numeric symbol representing "four."            │
-# │  fourth │   Ordinal number (word form)  │ This is the written-out version of "4th," used to describe position. │
-# │   4th   │  Ordinal numeral (digit form) │        This is the numeric way of writing an ordinal number.         │
-# │    IV   │         Roman numeral         │     This represents the number "4" in the Roman numeral system.      │
-# ┕━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┙
+# DOYDL's Symbolic Integer Representation Engine — numbr
+#
+# The `numbr` module implements a formalized system for parsing, classifying,
+# and transforming symbolic representations of integers. Designed to support
+# natural language processing (NLP) pipelines, knowledge extraction, and
+# symbolic reasoning, it provides a deterministic interface for converting
+# between cardinal words, ordinal phrases, Roman numerals, and standard digit
+# forms.
+#
+# All conversions are unambiguous and invertible over ℤ ∩ [–10²⁴, 10²⁴), with
+# parsing grammars tailored to the structure and semantics of English number
+# words. This system is well-suited for use in contexts where numeric meaning
+# must be inferred from or rendered into language — such as automated
+# annotation, question answering, legal text processing, and mathematical dialogue.
+#
+# Copyright (c) 2024 by DOYDL Technologies. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the “Software”), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 # 
-# This module is designed to help developers work with numbers in natural language processing (NLP), data extraction, 
-# and automated text conversion.
 
+"""
+This module constitutes the core semantic engine for parsing, normalizing,
+and interconverting between symbolic representations of natural numbers.
+It is intended for use in computational linguistics, formal reasoning systems,
+and symbolic data extraction, where unambiguous interpretation of numeric
+tokens is essential.
 
+The functions defined herein reduce numerically-expressive strings to canonical
+integer values (ℤ), and emit deterministic re-renderings in various notational
+conventions. All routines operate under the assumption that numbers exist in
+discrete representation classes, each with fixed grammar and semantics.
+
+────────────────────────────────────────────────────
+Typology of Numeric Representations
+────────────────────────────────────────────────────
+We define five principal forms of symbolic integers, treated as disjoint
+syntactic categories with a shared underlying value domain ℤ⁺:
+
+┍━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┑
+│ Example │              Type             │                             Description                       │
+┝━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┿━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┥
+│   four  │  Cardinal number (word form)  │ English lexeme expressing absolute magnitude (e.g., "four").  │
+│    4    │ Cardinal numeral (digit form) │ Decimal numeral expressing cardinality (e.g., 4).             │
+│  fourth │   Ordinal number (word form)  │ Lexical form denoting position or rank (e.g., "fourth").      │
+│   4th   │  Ordinal numeral (digit form) │ Arabic numeral with ordinal suffix (e.g., "4th").             │
+│    IV   │         Roman numeral         │ Additive-subtractive Roman symbol encoding the value 4.       │
+┕━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┷━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┙
+
+Each representation class maps injectively to ℤ, up to a well-defined maximum
+(bounded here at 10²⁴). Parsing functions serve as partial functions
+ρ : Σ → ℤ, while rendering functions act as canonical inverse maps
+σ : ℤ → Σ, where Σ ⊂ strings conforming to the target syntax.
+
+This module defines no ambiguity: every accepted input resolves to a single
+integer, and each output form is deterministic and linguistically valid.
+
+────────────────────────────────────────────────────
+Mathematical Context and Use
+────────────────────────────────────────────────────
+This engine may be embedded in pipelines involving:
+    • Rule-based document analysis (contracts, forms, regulations)
+    • Natural language understanding (token to value extraction)
+    • Human-machine symbolic interfacing (voice agents, formal dialogs)
+    • Language-adjacent theorem provers or educational tools
+
+The system prioritizes:
+    • Deterministic transformation
+    • Invertible encoding/decoding
+    • Linguistic fidelity to natural English syntax
+    • Algorithmic tractability: all transformations are O(n)
+
+No inference is performed. The system relies on surface forms, not contextual
+semantics. As such, "eleven" parses to 11 regardless of nearby tokens.
+
+This module forms the computational foundation upon which higher-level
+abstractions (e.g., type guessing, inference, semantic tagging) may be layered.
+"""
 
 import re
 import inspect
-from typing import Literal, Union, Optional
-from functools import reduce
+from typing import Literal, Union, Optional, Dict
+from functools import reduce, update_wrapper, WRAPPER_ASSIGNMENTS
 
 
 Rep = Literal["CardinalWord", "CardinalNumber", "OrdinalWord", "OrdinalNumber"]
@@ -182,6 +259,60 @@ _CURRENCY_SYMBOLS = [
     r"CHF"  # Swiss Franc
 ]
 
+# Match ordinal numbers in digit form with suffix (e.g., "1st", "42nd", "103rd")
+_ORD_SUFFIX_RE = re.compile(r"^\d+(st|nd|rd|th)$", re.IGNORECASE)
+
+# Match strings that contain digits only (e.g., "123", "4567") — no signs, decimals, or commas
+_DIGIT_ONLY_RE = re.compile(r"^\d+$")
+
+# Matches digit-based numbers (e.g., 1,234.56 or -42)
+_DIGIT_NUMBER_RE = re.compile(r'-?\d+(?:,\d{3})*(?:\.\d+)?')
+
+# Matches a comma (used for cleanup after matching)
+_COMMA_RE = re.compile(r',')
+
+# Captures any non-digit characters at the beginning and end of a numeric string.
+# Groups:
+#   1. Prefix  (e.g. currency symbol, quote)
+#   2. Suffix  (e.g. unit, symbol, trailing chars)
+_NUM_STR_BOUNDARY_RE = re.compile(r"(^\D*)(?:[\d,.]+)?(\D*$)")
+
+# This pattern breaks up compound number phrases (e.g., "twenty-one" or "one hundred and five")
+_HYPHEN_OR_SPACE_RE = re.compile(r"[\s-]+")
+
+# Matches the final word token at the end of a string
+_LAST_WORD_RE = re.compile(r'\b(\w+)\b$')
+
+# Removes the final word token (and any space before it) from the end of a string
+_STRIP_LAST_WORD_RE = re.compile(r'\s*\b\w+\b$')
+
+# Matches a string of optional negative sign followed by digits only
+_PURE_DIGITS_RE = re.compile(r'^-?\d+$')
+    
+# Detects mixed numeric strings starting with a digit and ending in letters
+_DIGIT_THEN_LETTER_RE = re.compile(r'^\d.*[a-zA-Z]$')    
+    
+# Normalizes label strings by removing spaces and underscores
+_SPACE_UNDERSCORE_RE = re.compile(r"[ _]+")    
+    
+# A complete list of spelled-out cardinal numbers used for token splitting.
+# Includes "zero", unit digits, teen numbers, and multiples of ten.
+_CARDINAL_WORDS = ['zero', *_UNIT_DIGITS_WORDS, *_TEEN_NUMERALS_WORDS, *_TENS_MULTIPLES_WORDS]
+
+# A list of all recognized ordinal words (e.g., "first", "twentieth").
+# Derived from the _ORDINAL_MAPPING dictionary.
+_ORDINAL_WORDS = list(_ORDINAL_MAPPING.keys())
+
+# Matches a hyphen between two valid number words (e.g., "twenty-first"),
+# so that compound forms can be safely rewritten with a space for parsing.
+# This facilitates downstream processing of multi-word ordinals as separate tokens.
+_HYPHEN_BETWEEN_NUMBER_WORDS_RE = re.compile(
+    rf'\b({"|".join(_CARDINAL_WORDS + _ORDINAL_WORDS)})-({"|".join(_CARDINAL_WORDS + _ORDINAL_WORDS)})\b',
+    flags=re.IGNORECASE
+)
+    
+    
+    
 ## Helper Functions
 ##━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -199,22 +330,16 @@ def __parseNumericToken(s: str, first_only: bool = True, wrap_single: bool = Fal
     """
     def _tokenize_digit(text: str, first_only: bool = True):
         """
-        Finds digit-based tokens in a string, including optional decimals, and commas.
+        Finds digit-based tokens in a string, including optional decimals and commas.
         """
-        pattern = r'-?\d+(?:,\d{3})*(?:\.\d+)?'        
-
-        matches = list(re.finditer(pattern, text))
+        matches = list(_DIGIT_NUMBER_RE.finditer(text))
         if not matches:
             return None if first_only else []
 
         # Convert each match to a string, removing commas
-        found = [re.sub(r',', '', m.group(0)) for m in matches]
+        found = [_COMMA_RE.sub('', m.group(0)) for m in matches]
 
-        if first_only:
-            # Return a single-element list
-            return [found[0]]
-        else:
-            return found
+        return [found[0]] if first_only else found
        
     def _tokenize_alpha(text: str, first_only: bool = True):
         """
@@ -313,7 +438,6 @@ def __switch(x):
 
 
 
-
 ## General Formatting & Numeric Processing
 ##━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -342,7 +466,7 @@ def insertSep(n: Union[int, float, str], sep: str = ",") -> Optional[str]:
     num_str = " ".join(num_str.split()) 
     
     # Extract non-numeric characters at the beginning and end
-    match = re.match(r"(^\D*)(?:[\d,.]+)?(\D*$)", num_str)
+    match = _NUM_STR_BOUNDARY_RE.match(num_str)
     if not match:
         return None
 
@@ -413,7 +537,6 @@ def formatDecimal(n: Union[int, float, str], place: int = 5) -> Optional[str]:
 ## Main Conversion Logic
 ##━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-
 # WORD-BASED NUMBER TO INTEGER: CONVERT CARDINAL NUMBERS IN WORD FORM (E.G., "TWENTY-FIVE") TO INTEGERS
 #───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def wordsToInt(s: str, thousands_sep: bool = False, sep: str = ","):
@@ -478,7 +601,7 @@ def wordsToInt(s: str, thousands_sep: bool = False, sep: str = ","):
                     units_dict[compound] = units_dict[w] * _MULTIPLIERS[mult]
 
     # Split out hyphens/spaces, skip "and" tokens
-    words_list = re.split(r"[\s-]+", s)
+    words_list = _HYPHEN_OR_SPACE_RE.split(s)
     words_list = [w for w in words_list if w != "and"]  # skip "and"
 
     number = 0
@@ -514,6 +637,8 @@ def wordsToInt(s: str, thousands_sep: bool = False, sep: str = ","):
     return number
 
 
+
+
 # WORD-BASED NUMBER TO INTEGER: CONVERT ORDINAL NUMBERS IN WORD FORM (E.G., "TWENTY-FIRST") TO INTEGERS
 #───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 def ordinalWordsToInt(s: str, to_num: bool = False, thousands_sep: bool = False, sep: str = ","):
@@ -540,18 +665,17 @@ def ordinalWordsToInt(s: str, to_num: bool = False, thousands_sep: bool = False,
                             (e.g., "21st") or as an integer (if `to_num=True`), or 
                             None if parsing fails.
     """
-    # Define lists of spelled-out cardinal and ordinal numbers and combine both lists
-    cardinal_numbers = ['zero', *_UNIT_DIGITS_WORDS, *_TEEN_NUMERALS_WORDS, *_TENS_MULTIPLES_WORDS]
-    ordinal_numbers = list(_ORDINAL_MAPPING.keys())
-    number_words = cardinal_numbers + ordinal_numbers
-
-    # Build a regex pattern that matches a hyphen only if it is between two valid number words
-    pattern = r'\b(' + '|'.join(number_words) + r')-(' + '|'.join(number_words) + r')\b'
-
-    # s = re.sub(r'(\w)-(\w)', r'\1 \2', s)
+    # # Define lists of spelled-out cardinal and ordinal numbers and combine both lists
+    # cardinal_numbers = ['zero', *_UNIT_DIGITS_WORDS, *_TEEN_NUMERALS_WORDS, *_TENS_MULTIPLES_WORDS]
+    # ordinal_numbers = list(_ORDINAL_MAPPING.keys())
+    # number_words = cardinal_numbers + ordinal_numbers
+    # 
+    # # Build a regex pattern that matches a hyphen only if it is between two valid number words
+    # pattern = r'\b(' + '|'.join(number_words) + r')-(' + '|'.join(number_words) + r')\b'
     
     # Replaces hyphens only if they are between spelled-out cardinal or ordinal number words.    
-    s = re.sub(pattern, r'\1 \2', s, flags=re.IGNORECASE)
+    # s = re.sub(pattern, r'\1 \2', s, flags=re.IGNORECASE)
+    s = _HYPHEN_BETWEEN_NUMBER_WORDS_RE.sub(r'\1 \2', s)    
 
     if not s:
         return None
@@ -593,13 +717,13 @@ def ordinalWordsToInt(s: str, to_num: bool = False, thousands_sep: bool = False,
         Handle multi-word ordinals: 'twenty first' -> '21st', 'one hundred and first' -> '101st'
         """
         # We'll try removing the last word as an ordinal ending, then parse the front as cardinal
-        last_word_match = re.search(r'\b(\w+)\b$', tok)
+        last_word_match = _LAST_WORD_RE.search(tok)
         if not last_word_match:
             return None
         last_word = last_word_match.group()
 
         # Everything except the last word
-        front_string = re.sub(r'\s*\b\w+\b$', '', tok).strip()
+        front_string = _STRIP_LAST_WORD_RE.sub('', tok).strip()
 
         # Convert front part to integer (cardinal)
         front_number = wordsToInt(front_string)
@@ -694,11 +818,7 @@ def stringToInt(s: str, to_str: bool = False, thousands_sep: bool = False, sep: 
         number_str = number_str.lower().replace("minus ", "", 1)
 
     tokens = __parseNumericToken(number_str)
-    # if tokens and re.match(r'^-?\d+$', str(tokens)):
-    #     val = int(tokens)
-    #     val = -val if is_negative else val
-    #     return str(val) if to_str else val
-    if tokens and re.match(r'^-?\d+$', str(tokens)):
+    if tokens and _PURE_DIGITS_RE.match(str(tokens)):
         val = int(tokens)
         val = -val if is_negative else val
         if thousands_sep and to_str:
@@ -947,7 +1067,7 @@ def intToOrdinalWords(n: int):
 
 # ORDINAL NUMBER UTILITIES: EXTRACT THE APPROPRIATE SUFFIX ("ST", "ND", "RD", "TH") FOR AN INTEGER
 #───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-def ordinalSuffix(n: int):
+def ordinalSuffix(n: Union[int, str]) -> str:
     """
     Determines the appropriate English ordinal suffix for a given integer.
 
@@ -964,10 +1084,12 @@ def ordinalSuffix(n: int):
         str: The appropriate ordinal suffix ('st', 'nd', 'rd', or 'th').
     """
     try:
+        if _DIGIT_THEN_LETTER_RE.match(str(n).strip()):
+            n = ordinalNumToCardinalNum(n)
         n = int(str(n).strip())
     except (ValueError, TypeError):
-        return None    
-    
+        return None  
+       
     last_two = abs(n) % 100
     last_digit = abs(n) % 10
     if last_two in (11, 12, 13):
@@ -981,6 +1103,7 @@ def ordinalSuffix(n: int):
             return "rd"
         else:
             return "th"
+
 
 # ORDINAL NUMBER UTILITIES: REMOVE THE ORDINAL ENDING FROM A WORD-BASED NUMBER (E.G., "TWENTIETH" → "TWENTY")
 #───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -1056,13 +1179,9 @@ def extractNumericValue(s: str, allnum: bool = True):
         is_negative = True
         string = string.replace("minus ", "", 1)
     
-    # tokens = __parseNumericToken(s, first_only=False)  # Get all matches
     tokens = __parseNumericToken(s, first_only=__switch(allnum), wrap_single=True)  # Get all matches if allnum == True. The switch function swithes allnum boolen to False.    
     if not tokens:
         return None
-
-    # if not isinstance(tokens, list):
-    #     tokens=[tokens]
 
     def _check_and_return(num):
         return num if isinstance(num, int) else None
@@ -1210,11 +1329,9 @@ def _convert_numeric_representation(
     elif from_rep == "OrdinalNumber":                      # "2nd"  -> 2
         base_int = _ensure_int(value)
     else:
-        # raise ValueError(f"Unknown from_rep {from_rep!r}")
         return None        
 
     if base_int is None:
-        # raise ValueError(f"Could not interpret {value!r} as {from_rep}")
         return None
 
     # ─── step 2: materialise requested representation ─────────────────────────
@@ -1226,8 +1343,6 @@ def _convert_numeric_representation(
         return intToOrdinalWords(base_int)
     elif to_rep == "OrdinalNumber":                        # 2 -> "2nd"
         return _cardinal_number_to_ordinal_number(base_int)
-
-    # raise ValueError(f"Unknown to_rep {to_rep!r}")
     return None    
 
 
@@ -1486,6 +1601,220 @@ def ordinalNumToOrdinalWord(s: str):
 
 
 
+# CONVERSION LOGIC 
+# ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+class __NumericConverter:
+    """
+    Internal utility class for identifying and converting between different numeric representations.
+
+    This class provides type detection and transformation across four canonical numeric formats:
+        - Cardinal Number (e.g., 4)
+        - Cardinal Word   (e.g., "four")
+        - Ordinal Number  (e.g., "4th")
+        - Ordinal Word    (e.g., "fourth")
+
+    It uses the `numbr` module's conversion functions internally and supports automatic type inference,
+    conversion routing, and optional string casting for numeric outputs.
+
+    Note:
+        This class is intended for internal use and is not part of the public API.
+    """
+    #   Alias handling for representation labels
+    _LABEL_ALIASES: Dict[str, str] = {
+        # Cardinal Number
+        "cardinalnumber": "Cardinal Number",
+        "cardnum":        "Cardinal Number",
+        "card-num":       "Cardinal Number",
+        "cn":             "Cardinal Number",
+        "cnum":           "Cardinal Number",
+        "digit":          "Cardinal Number",
+        "number":         "Cardinal Number",
+        "num":            "Cardinal Number",
+        "int":            "Cardinal Number",
+
+        # Cardinal Word
+        "cardinalword":   "Cardinal Word",
+        "cardword":       "Cardinal Word",
+        "card-word":      "Cardinal Word",
+        "cw":             "Cardinal Word",
+        # "word":           "Cardinal Word",
+        "wordnum":        "Cardinal Word",
+        "wordnumber":     "Cardinal Word",
+        "cword":          "Cardinal Word",
+
+        # Ordinal Number
+        "ordinalnumber":  "Ordinal Number",
+        "ordnum":         "Ordinal Number",
+        "ord-num":        "Ordinal Number",
+        "on":             "Ordinal Number",
+        "onum":           "Ordinal Number",
+        "rank":           "Ordinal Number",
+        "position":       "Ordinal Number",
+        "place":          "Ordinal Number",
+
+        # Ordinal Word
+        "ordinalword":    "Ordinal Word",
+        "ordword":        "Ordinal Word",
+        "ord-word":       "Ordinal Word",
+        "ow":             "Ordinal Word",
+        "wordord":        "Ordinal Word",
+        "wordordinal":    "Ordinal Word",
+        "oword":          "Ordinal Word",
+    }
+
+    @classmethod
+    def _canon(cls, label=None):
+        """
+        Canonicalise a user-supplied representation label.
+
+        • lower-case → strip spaces/underscores → look up alias  
+        • if not found, assume the caller already supplied a canonical string  
+        • returns None unchanged
+        """
+        if label is None:
+            return None
+        norm = _SPACE_UNDERSCORE_RE.sub("", str(label).strip().lower())
+        return cls._LABEL_ALIASES.get(norm, label)
+    # ----------------------------------------------------------------------
+    
+    # Mapping between representations and conversion functions from numbr
+    _CONV_MAP = {
+        # --- From Cardinal Number
+        ("Cardinal Number", "Cardinal Word"):   	cardinalNumToCardinalWord,
+        ("Cardinal Number", "Ordinal Number"):    cardinalNumToOrdinalNum,
+        ("Cardinal Number", "Ordinal Word"):      cardinalNumToOrdinalWord,
+        # --- From Cardinal Word    
+        ("Cardinal Word", "Cardinal Number"):     cardinalWordToCardinalNum,
+        ("Cardinal Word", "Ordinal Number"):      cardinalWordToOrdinalNum,
+        ("Cardinal Word", "Ordinal Word"):        cardinalWordToOrdinalWord,
+        # --- From Ordinal Number     
+        ("Ordinal Number", "Cardinal Number"):    ordinalNumToCardinalNum,
+        ("Ordinal Number", "Cardinal Word"):      ordinalNumToCardinalWord,
+        ("Ordinal Number", "Ordinal Word"):       ordinalNumToOrdinalWord,
+        # --- From Ordinal Word     
+        ("Ordinal Word", "Cardinal Number"):      ordinalWordToCardinalNum,
+        ("Ordinal Word", "Cardinal Word"):        ordinalWordToCardinalWord,
+        ("Ordinal Word", "Ordinal Number"):       ordinalWordToOrdinalNum,
+    }
+    
+    #  Public: detect representation category
+    @classmethod
+    def num_type(cls, value):
+        """
+        Infer the numeric representation type of a given input value.
+
+        This method classifies the input into one of four types based on its structure and content:
+            - "Cardinal Number" for digit-only numbers (e.g., 42, "100")
+            - "Ordinal Number" for ordinal numerals with suffixes (e.g., "1st", "22nd")
+            - "Cardinal Word" for spelled-out cardinal numbers (e.g., "four", "eighteen")
+            - "Ordinal Word" for spelled-out ordinal numbers (e.g., "third", "twentieth")
+
+        Parameters:
+        ──────────────────────────
+            value (str | int): The input to analyze.
+
+        Returns:
+        ──────────────────────────
+            str or None: The detected representation name, or None if it cannot be determined.
+        """    	
+        if isinstance(value, int):
+            return "Cardinal Number"
+        
+        s = str(value).strip().lower()
+        
+        # 1. ordinal number (e.g. "21st")
+        if cls._ORD_SUFFIX_RE.match(s):
+            return "Ordinal Number"
+        
+        # 2. cardinal number (all digits)
+        if cls._DIGIT_ONLY_RE.match(s):
+            return "Cardinal Number"
+        
+        # 3. spelled-out ordinal word?
+        if ordinalWordToCardinalNum(s) is not None:
+            return "Ordinal Word"
+        
+        # 4. spelled-out cardinal word?
+        if cardinalWordToCardinalNum(s) is not None:
+            return "Cardinal Word"
+        
+        return None
+
+    #  Public: convert between representations
+    @classmethod
+    def to_type(cls, value, target=None, *, as_str=False):
+        """
+        Convert a numeric value from its current representation to a target representation.
+
+        This method routes the conversion using the internal type map and the `numbr` module's converters.
+        If no conversion is needed or the target is unspecified, it either returns the detected type or the original value.
+
+        Parameters:
+        ──────────────────────────
+            value (str | int): The numeric value to convert.
+            target (str | None): The target representation to convert to. Must be one of:
+                "Cardinal Number", "Cardinal Word", "Ordinal Number", "Ordinal Word".
+            as_str (bool, optional): If True, return numeric results as strings. Default is False.
+
+        Returns:
+        ──────────────────────────
+            str | int: The converted result in the requested representation.
+
+        Raises:
+        ──────────────────────────        	
+            ValueError: If the type of `value` cannot be determined or conversion is not possible.
+        """    	
+        src = cls.num_type(value)
+        if src is None:
+            raise ValueError(f"Cannot determine representation of {value!r}")
+
+        target = cls._canon(target)
+
+        # no conversion requested or needed
+        if target is None or target == src:
+            return src if target is None else value
+
+        try:
+            func = cls._CONV_MAP[(src, target)]
+        except KeyError as exc:
+            raise ValueError(f"No conversion path from {src} to {target}") from exc
+        result = func(value)
+        
+        # optional cast to str for numeric results        
+        if as_str and isinstance(result, int):
+            result = str(result)
+        return result
+
+
+# Internal singleton used for identifying and transforming numeric types
+_numbers = __NumericConverter()
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Public-facing wrappers for numeric type inspection and conversion
+# These wrap internal methods on the __NumericConverter instance, while preserving
+# docstrings and metadata (without overwriting their custom function names).
+# ──────────────────────────────────────────────────────────────────────────────
+def Type(value):
+    """This will be replaced by update_wrapper."""
+    # Determine the numeric representation of the given value
+    return _numbers.num_type(value)
+
+def Cast(value, target=None, *, as_str=False):
+    """This will be replaced by update_wrapper."""	
+    # Convert a numeric value to a target representation (with optional str cast)
+    return _numbers.to_type(value, target, as_str=as_str)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Preserve docstrings and metadata from original methods,
+# but keep the wrapper's own function names (Type, Cast)
+# ──────────────────────────────────────────────────────────────────────────────
+custom_assignments = tuple(
+    attr for attr in WRAPPER_ASSIGNMENTS if attr not in ('__name__', '__qualname__')
+)
+
+update_wrapper(Cast, __NumericConverter.to_type, assigned=custom_assignments)
+update_wrapper(Type, __NumericConverter.num_type, assigned=custom_assignments)
 
 
 
@@ -1520,17 +1849,9 @@ __all__ = [
     "ordinalNumToCardinalWord",
     "ordinalNumToCardinalNum",
     "ordinalNumToOrdinalWord",
+    
+    # Public aliases for numeric type detection and conversion
+    "Type",   # Detect the representation type of a number (e.g., "Ordinal Word", "Cardinal Number")
+    "Cast",   # Convert a value between numeric representations (e.g., word → digit)    
 ]
 
-
-
-
-
-
-
-
-
-
-
-
-  
