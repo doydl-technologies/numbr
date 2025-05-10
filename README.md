@@ -1,7 +1,25 @@
-# **numbr**  
+
+---
+
+<div align="center">
+
+# 🌟 **numbr** 🌟
+
+> **It handles everything from *“forty-two”* → `42` to *“Ⅳ”* → *“fourth”* in a single call.**
+
+</div>
+
 
 **A lightweight NLP-focused Python toolkit for recognising, parsing, and transforming numbers expressed in natural-language or symbolic form.**  
-It handles everything from *“forty-two”* → `42` to *“Ⅳ”* → *“fourth”* in a single call. 
+
+
+
+[![PyPI Downloads](https://static.pepy.tech/badge/numbr)](https://pepy.tech/projects/numbr)
+![Language](https://img.shields.io/badge/language-python-blue)
+![License](https://img.shields.io/github/license/cedricmoorejr/numbr)
+![PyPI](https://img.shields.io/pypi/v/numbr)
+[![Engineered by DOYDL Technologies](https://img.shields.io/badge/Engineered%20by-DOYDL%20Technologies-blue)](https://doydl.com)
+
 
 ---
 
