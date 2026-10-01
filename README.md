@@ -1,133 +1,125 @@
+# numbr
 
----
+[![PyPI](https://img.shields.io/pypi/v/numbr)](https://pypi.org/project/numbr/)
+[![Python](https://img.shields.io/pypi/pyversions/numbr)](https://pypi.org/project/numbr/)
+[![CI](https://github.com/cedricmoorejr/numbr/actions/workflows/ci.yml/badge.svg)](https://github.com/cedricmoorejr/numbr/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/cedricmoorejr/numbr)](LICENSE)
 
-<div align="center">
+`numbr` parses and converts numbers represented as English cardinal words,
+English ordinal words, decimal digits, ordinal digits, and Roman numerals.
 
-# 🌟 **numbr** 🌟
+```python
+import numbr
 
-> **It handles everything from *“forty-two”* → `42` to *“Ⅳ”* → *“fourth”* in a single call.**
+numbr.wordsToInt("one hundred sixty-seven")
+# 167
 
-</div>
+numbr.Cast("forty-ninth", "Ordinal Number")
+# "49th"
 
+numbr.Cast("Ⅳ", "Ordinal Word")
+# "fourth"
 
-**A lightweight NLP-focused Python toolkit for recognising, parsing, and transforming numbers expressed in natural-language or symbolic form.**  
+numbr.extractNumericValue("He scored twenty-one of 34 attempts")
+# [21, 34]
+```
 
+## Installation
 
+Install the latest release from PyPI:
 
-[![PyPI Downloads](https://static.pepy.tech/badge/numbr)](https://pepy.tech/projects/numbr)
-![Language](https://img.shields.io/badge/language-python-blue)
-![License](https://img.shields.io/github/license/cedricmoorejr/numbr)
-![PyPI](https://img.shields.io/pypi/v/numbr)
-[![Engineered by DOYDL Technologies](https://img.shields.io/badge/Engineered%20by-DOYDL%20Technologies-blue)](https://doydl.com)
-
-
----
-
-## ✨ Key capabilities
-| Task | Example in | Example out | Function |
-|------|------------|-------------|-----------|
-| Spell-out → digits | `"one hundred sixty-seven"` | `167` | `wordsToInt` |
-| Digits → words | `19007` | `"nineteen thousand seven"` | `intToWords` |
-| Any form → **type detection** | `"3rd"` | `"Ordinal Number"` | `Type` |
-| Cross-form **casting** | `"third"` → `"3"` | `"third"` | `Cast("third", "Cardinal Number")` |
-| Roman → integer | `"MCMXCIV"` | `1994` | `romanToInt` |
-| Batch extraction | `"He scored twenty-one of 34 attempts"` | `[21, 34]` | `extractNumericValue` |
-
-*(full API listed below)*
-
----
-
-## 🔧 Installation
 ```bash
-pip install numbr     
-# or install from source
-pip install git+https://github.com/cedricmoorejr/numbr.git
+python -m pip install numbr
 ```
 
----
+Or install the current development version from GitHub:
 
-## 🚀 Quick start
-```python
-import numbr
-
-numbr.Type("forty-ninth")
-# → 'Ordinal Word'
-
-numbr.Cast("forty-ninth", target="Ordinal Number")
-# → '49th'
-
-numbr.Cast(512, target="Ordinal Word")
-# → 'five hundred twelve th'
+```bash
+python -m pip install 'numbr @ git+ssh://git@github.com/cedricmoorejr/numbr.git'
 ```
 
----
+Python 3.8 or newer is required. The package has no runtime dependencies.
 
-## 🧰 Public API Overview
+## Representations
 
-`numbr` exposes a clean, top-level API designed for simplicity and readability.  
-All functions listed below are available directly via:
+| Representation | Examples | `Type` result |
+|---|---|---|
+| Cardinal number | `42`, `"-42"` | `"Cardinal Number"` |
+| Cardinal word | `"forty-two"` | `"Cardinal Word"` |
+| Ordinal number | `"42nd"` | `"Ordinal Number"` |
+| Ordinal word | `"forty-second"` | `"Ordinal Word"` |
+| Roman numeral | `"XLII"`, `"Ⅳ"` | `"Roman Numeral"` |
+
+`Cast` accepts those display names and common aliases such as `int`, `cardword`,
+`ordnum`, and `roman`.
 
 ```python
-import numbr
-
 numbr.Type("twenty-first")
-numbr.Cast("Ⅳ", target="Ordinal Word")
+# "Ordinal Word"
+
+numbr.Cast("twenty-first", "Cardinal Number")
+# 21
+
+numbr.Cast(1994, "Roman Numeral")
+# "MCMXCIV"
 ```
 
-No internal modules need to be accessed directly — everything is exposed at the package root.
+Roman output is limited to canonical values from 1 through 3999. English number
+conversion supports integers whose absolute value is less than `10**24`.
 
----
+## Public API
 
-### 1. High-Level Helpers
+### General conversion
 
-| Helper | Purpose |
-|--------|---------|
-| **`Type(value)`** | Detect and return the representation category of `value` — e.g., `"Cardinal Word"`, `"Ordinal Number"`, etc. |
-| **`Cast(value, target, *, as_str=False)`** | Convert `value` to a target representation and optionally return it as a string. |
+- `Type(value)` detects the representation or returns `None`.
+- `Cast(value, target, *, as_str=False)` converts between representations and
+  raises `ValueError` when the input or requested conversion is invalid.
 
----
+### Parsing and formatting
 
-### 2. Core Conversion Functions
+- `wordsToInt`
+- `ordinalWordsToInt`
+- `stringToInt`
+- `intToWords`
+- `intToOrdinalWords`
+- `romanToInt`
+- `romanToWords`
+- `intToRoman`
+- `ordinalSuffix`
+- `stripOrdinalSuffix`
+- `extractNumericValue`
+- `insertSep`
+- `formatDecimal`
 
-These functions handle numeric parsing, word formatting, Roman numeral conversion, and formatting:
+The direct cross-representation helpers from earlier releases remain available,
+including `cardinalWordToOrdinalNum`, `ordinalNumToCardinalWord`, and related
+functions.
 
-- `wordsToInt`, `ordinalWordsToInt`, `stringToInt`  
-- `intToWords`, `intToOrdinalWords`  
-- `ordinalSuffix`, `stripOrdinalSuffix`  
-- `romanToInt`, `romanToWords`  
-- `insertSep`, `formatDecimal`, `extractNumericValue`  
+Lower-level parsing functions return `None` for invalid input. Decimal conversion
+spells digits after the point individually so that zeros are preserved:
 
----
+```python
+numbr.intToWords("1.05")
+# "one point zero five"
+```
 
-### 3. Cross-Type Shorthands
+## Development
 
-These helpers provide direct one-step conversions between common forms:
+```bash
+git clone git@github.com:cedricmoorejr/numbr.git
+cd numbr
+python -m venv .venv
+source .venv/bin/activate  # .venv/Scripts/activate on MSYS2/Windows
+python -m pip install -e '.[dev]'
+pytest
+ruff check .
+python -m build
+```
 
-- `cardinalWordToOrdinalNum`
-- `ordinalNumToCardinalWord`
-- `ordinalWordToCardinalNum`
-- ...and many more.
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md),
+[CHANGELOG.md](CHANGELOG.md), and [RELEASING.md](RELEASING.md) for project
+policies, release history, and the maintainer release procedure.
 
-Use these when you know the source and target types and want to avoid an intermediate call to `Cast`.
+## License
 
----
-
-## 📝 Roadmap
-- Locale & language plugins (FR, DE…)
-- Currency-aware formatting
-- CLI utility
-
----
-
-## 📄 License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## 🙌 Contributing
-Issues, pull-requests and feature ideas are very welcome to improve `numbr`!  
-Clone the repo, create a branch, add tests, and open a PR.
-
----
-
-### Happy number-crunching!
+Licensed under the [MIT License](LICENSE).
