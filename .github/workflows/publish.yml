@@ -8,8 +8,39 @@ permissions:
   contents: read
 
 jobs:
+  check-version:
+    name: Check whether version is already published
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.pypi.outputs.exists }}
+    steps:
+      - name: Check PyPI for the tagged version
+        id: pypi
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          version="${TAG_NAME#v}"
+          status=$(curl --silent --show-error --output /dev/null --write-out "%{http_code}" \
+            "https://pypi.org/pypi/numbr/${version}/json")
+          case "$status" in
+            200)
+              echo "exists=true" >> "$GITHUB_OUTPUT"
+              echo "numbr ${version} is already published; skipping package publication."
+              ;;
+            404)
+              echo "exists=false" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unexpected response from PyPI: HTTP ${status}" >&2
+              exit 1
+              ;;
+          esac
+
   build:
     name: Build release distributions
+    needs: check-version
+    if: needs.check-version.outputs.exists != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Check out released tag
