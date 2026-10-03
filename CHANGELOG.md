@@ -5,6 +5,15 @@ All notable changes to this project are documented here. The project follows
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-10-03
+
+### Changed
+
+- Transfer project links and release documentation to the `doydl-technologies` GitHub organization.
+- Standardize package authorship, copyright notices, and project headers under DOYDL Technologies.
+- Refresh the README with DOYDL branding, project badges, and a table of contents.
+- Add official numbr and DOYDL Technologies logo assets.
+
 ## [2.1.0] - 2026-09-30
 
 ### Added
@@ -29,6 +38,7 @@ All notable changes to this project are documented here. The project follows
 
 - Previous PyPI release.
 
-[Unreleased]: https://github.com/doydl-technologies/numbr/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/doydl-technologies/numbr/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/doydl-technologies/numbr/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/doydl-technologies/numbr/compare/v2.0.6...v2.1.0
 [2.0.6]: https://github.com/doydl-technologies/numbr/releases/tag/v2.0.6
