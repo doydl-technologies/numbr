@@ -5,7 +5,7 @@ Thank you for helping improve `numbr`.
 ## Development setup
 
 ```bash
-git clone git@github.com:cedricmoorejr/numbr.git
+git clone git@github.com:doydl-technologies/numbr.git
 cd numbr
 python -m venv .venv
 source .venv/bin/activate

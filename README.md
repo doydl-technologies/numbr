@@ -1,12 +1,28 @@
-# numbr
+<p align="center">
+  <img src="https://raw.githubusercontent.com/doydl-technologies/numbr/main/assets/png/numbr-primary-wordmark-1200x360.png" alt="numbr" width="700">
+</p>
 
-[![PyPI](https://img.shields.io/pypi/v/numbr)](https://pypi.org/project/numbr/)
-[![Python](https://img.shields.io/pypi/pyversions/numbr)](https://pypi.org/project/numbr/)
-[![CI](https://github.com/cedricmoorejr/numbr/actions/workflows/ci.yml/badge.svg)](https://github.com/cedricmoorejr/numbr/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/cedricmoorejr/numbr)](LICENSE)
+<p align="center">
+  Parses and converts numbers represented as English cardinal words, English ordinal words, decimal digits, ordinal digits, and Roman numerals.
+</p>
 
-`numbr` parses and converts numbers represented as English cardinal words,
-English ordinal words, decimal digits, ordinal digits, and Roman numerals.
+
+<p align="center">
+  <a href="https://pypi.org/project/numbr/"><img src="https://img.shields.io/pypi/v/numbr" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/numbr/"><img src="https://img.shields.io/pypi/pyversions/numbr" alt="Supported Python versions"></a>
+  <a href="https://pepy.tech/project/numbr"><img src="https://static.pepy.tech/badge/numbr" alt="Downloads"></a>
+  <a href="https://doydl.com"><img src="https://img.shields.io/badge/Powered%20by-DOYDL%20Technologies-blue" alt="Powered by DOYDL Technologies"></a>
+</p>
+
+## Table of contents
+
+- [Installation](#installation)
+- [Representations](#representations)
+- [Public API](#public-api)
+  - [General conversion](#general-conversion)
+  - [Parsing and formatting](#parsing-and-formatting)
+- [Development](#development)
+- [License](#license)
 
 ```python
 import numbr
@@ -35,7 +51,7 @@ python -m pip install numbr
 Or install the current development version from GitHub:
 
 ```bash
-python -m pip install 'numbr @ git+ssh://git@github.com/cedricmoorejr/numbr.git'
+python -m pip install 'numbr @ git+ssh://git@github.com/doydl-technologies/numbr.git'
 ```
 
 Python 3.8 or newer is required. The package has no runtime dependencies.
@@ -106,7 +122,7 @@ numbr.intToWords("1.05")
 ## Development
 
 ```bash
-git clone git@github.com:cedricmoorejr/numbr.git
+git clone git@github.com:doydl-technologies/numbr.git
 cd numbr
 python -m venv .venv
 source .venv/bin/activate  # .venv/Scripts/activate on MSYS2/Windows

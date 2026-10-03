@@ -29,6 +29,6 @@ All notable changes to this project are documented here. The project follows
 
 - Previous PyPI release.
 
-[Unreleased]: https://github.com/cedricmoorejr/numbr/compare/v2.1.0...HEAD
-[2.1.0]: https://github.com/cedricmoorejr/numbr/compare/v2.0.6...v2.1.0
-[2.0.6]: https://github.com/cedricmoorejr/numbr/releases/tag/v2.0.6
+[Unreleased]: https://github.com/doydl-technologies/numbr/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/doydl-technologies/numbr/compare/v2.0.6...v2.1.0
+[2.0.6]: https://github.com/doydl-technologies/numbr/releases/tag/v2.0.6

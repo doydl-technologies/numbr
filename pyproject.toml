@@ -11,7 +11,7 @@ requires-python = ">=3.8"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-  { name = "Cedric Moore Jr." },
+  { name = "DOYDL Technologies" },
 ]
 keywords = ["numbers", "nlp", "ordinals", "parser", "roman-numerals"]
 classifiers = [
@@ -41,10 +41,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/cedricmoorejr/numbr"
-Documentation = "https://github.com/cedricmoorejr/numbr#readme"
-Issues = "https://github.com/cedricmoorejr/numbr/issues"
-Changelog = "https://github.com/cedricmoorejr/numbr/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/doydl-technologies/numbr"
+Documentation = "https://github.com/doydl-technologies/numbr#readme"
+Issues = "https://github.com/doydl-technologies/numbr/issues"
+Changelog = "https://github.com/doydl-technologies/numbr/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/numbr"]
