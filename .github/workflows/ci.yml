@@ -55,7 +55,7 @@ jobs:
         run: |
           python -m pip install --force-reinstall dist/*.whl
           cd /tmp
-          python -I -c "import numbr; assert numbr.__version__ == '3.2.3'; assert numbr.Cast('Ⅳ', 'Ordinal Word') == 'fourth'"
+          python -I -c "import numbr; assert numbr.__version__ == '3.3.4'; assert numbr.Cast('Ⅳ', 'Ordinal Word') == 'fourth'"
       - name: Upload distributions
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
