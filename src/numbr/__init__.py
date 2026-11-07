@@ -43,12 +43,15 @@
 # SOFTWARE.
 #
 
-"""Parse and convert cardinal, ordinal, digit, and Roman numeral forms.
+"""Parse, diagnose, batch-convert, extract, and normalize numeric representations.
 
-English integer conversions support values whose absolute value is less than
-``10**24``. Roman numeral conversions use canonical notation from 1 through
-3999. Lower-level conversion functions return ``None`` for invalid input;
-``Cast`` raises ``ValueError`` when detection or conversion fails.
+English conversions support values whose integer component has an absolute
+value less than ``10**24``. Fixed-point, scientific, and accounting conversions
+use ``decimal.Decimal`` to preserve precision. Roman numeral conversions use
+canonical notation from 1 through 3999. Lower-level conversion functions return
+``None`` for invalid input; ``Cast`` raises ``ValueError`` when detection or
+conversion fails. Diagnostic APIs return structured results without raising for
+invalid numeric input.
 """
 
 from importlib.metadata import version as _distribution_version
@@ -58,14 +61,27 @@ from . import engine as __engine
 __version__ = _distribution_version("numbr")
 
 __all__ = [
+    "NumericMatch",
+    "ParseDiagnostic",
+    "ParseResult",
+    "BatchConversionError",
     "wordsToInt",
+    "wordsToDecimal",
     "ordinalSuffix",
     "intToWords",
+    "decimalToWords",
     "intToOrdinalWords",
     "stripOrdinalSuffix",
     "ordinalWordsToInt",
     "stringToInt",
+    "stringToDecimal",
+    "scientificToDecimal",
+    "accountingToDecimal",
     "extractNumericValue",
+    "extractNumericEntities",
+    "normalizeNumericText",
+    "decimalToScientific",
+    "decimalToAccounting",
     "romanToWords",
     "romanToInt",
     "intToRoman",
@@ -85,17 +101,33 @@ __all__ = [
     "ordinalNumToOrdinalWord",
     "Type",
     "Cast",
+    "diagnoseNumeric",
+    "batchDiagnose",
+    "batchCast",
     "__version__",
 ]
 
+NumericMatch = __engine.NumericMatch
+ParseDiagnostic = __engine.ParseDiagnostic
+ParseResult = __engine.ParseResult
+BatchConversionError = __engine.BatchConversionError
 wordsToInt = __engine.wordsToInt
+wordsToDecimal = __engine.wordsToDecimal
 ordinalSuffix = __engine.ordinalSuffix
 intToWords = __engine.intToWords
+decimalToWords = __engine.decimalToWords
 intToOrdinalWords = __engine.intToOrdinalWords
 stripOrdinalSuffix = __engine.stripOrdinalSuffix
 ordinalWordsToInt = __engine.ordinalWordsToInt
 stringToInt = __engine.stringToInt
+stringToDecimal = __engine.stringToDecimal
+scientificToDecimal = __engine.scientificToDecimal
+accountingToDecimal = __engine.accountingToDecimal
 extractNumericValue = __engine.extractNumericValue
+extractNumericEntities = __engine.extractNumericEntities
+normalizeNumericText = __engine.normalizeNumericText
+decimalToScientific = __engine.decimalToScientific
+decimalToAccounting = __engine.decimalToAccounting
 romanToWords = __engine.romanToWords
 romanToInt = __engine.romanToInt
 intToRoman = __engine.intToRoman
@@ -115,6 +147,9 @@ ordinalNumToCardinalNum = __engine.ordinalNumToCardinalNum
 ordinalNumToOrdinalWord = __engine.ordinalNumToOrdinalWord
 Type = __engine.Type
 Cast = __engine.Cast
+diagnoseNumeric = __engine.diagnoseNumeric
+batchDiagnose = __engine.batchDiagnose
+batchCast = __engine.batchCast
 
 del __engine
 del _distribution_version
