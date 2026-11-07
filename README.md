@@ -16,7 +16,11 @@
 
 ## Table of contents
 
+- [What numbr does](#what-numbr-does)
 - [Installation](#installation)
+- [Quick start](#quick-start)
+- [Choosing the right API](#choosing-the-right-api)
+- [Exact decimal values](#exact-decimal-values)
 - [Representations](#representations)
 - [Public API](#public-api)
   - [General conversion](#general-conversion)
@@ -29,39 +33,31 @@
 - [Development](#development)
 - [License](#license)
 
-```python
-from decimal import Decimal
+## What numbr does
 
-import numbr
+`numbr` gives Python applications one consistent way to understand numbers
+written in different forms. It can recognize that `"forty-two"`, `"42"`, and
+`"XLII"` represent the same value, then convert them to the representation an
+application needs.
 
-numbr.wordsToInt("one hundred sixty-seven")
-# 167
+The package is useful when numeric data arrives as human-written text rather
+than a clean integer or decimal. Common examples include form responses,
+documents, transcripts, scraped text, NLP pipelines, and imported business
+data.
 
-numbr.Cast("forty-ninth", "Ordinal Number")
-# "49th"
+With `numbr`, an application can:
 
-numbr.Cast("Ⅳ", "Ordinal Word")
-# "fourth"
+- identify the representation of one numeric value;
+- convert between digits, English number words, ordinals, and Roman numerals;
+- parse exact decimals, scientific notation, and accounting notation;
+- find every numeric expression in a larger passage of text;
+- replace numeric expressions while leaving the surrounding text intact;
+- receive structured explanations for invalid input; and
+- apply the same conversion or diagnostic operation to an iterable of values.
 
-numbr.Cast("one point zero five", "Decimal Number")
-# Decimal("1.05")
-
-numbr.Cast(Decimal("1.050"), "Cardinal Word")
-# "one point zero five zero"
-
-numbr.extractNumericValue("He scored twenty-one of 34 attempts")
-# [21, 34]
-
-numbr.extractNumericEntities("She placed 2nd with 1.05 points")
-# [NumericMatch(text='2nd', value=2, representation='Ordinal Number', ...),
-#  NumericMatch(text='1.05', value=Decimal('1.05'), representation='Decimal Number', ...)]
-
-numbr.normalizeNumericText("She placed forty-second with 1.20e3 points")
-# "She placed 42nd with 1200 points"
-
-numbr.batchCast(["one", "2", "III"], "Cardinal Number")
-# [1, 2, 3]
-```
+`numbr` is deterministic and rule-based. It does not use a language model,
+network service, locale database, or heuristic confidence score. The same
+supported input produces the same result on every platform.
 
 ## Installation
 
@@ -79,22 +75,116 @@ python -m pip install 'numbr @ git+ssh://git@github.com/doydl-technologies/numbr
 
 Python 3.13 is required. The package has no runtime dependencies.
 
+## Quick start
+
+Import `numbr`, then choose an operation based on whether the input is one
+value, a passage of text, or a collection of values.
+
+```python
+import numbr
+
+# Identify how one value is written.
+numbr.Type("forty-second")
+# "Ordinal Word"
+
+# Convert one value to a requested representation.
+numbr.Cast("forty-second", "Cardinal Number")
+# 42
+
+numbr.Cast("1.050", "Cardinal Word")
+# "one point zero five zero"
+
+# Collect normalized values from a larger passage.
+numbr.extractNumericValue("She placed 2nd with 1.05 points")
+# [2, Decimal("1.05")]
+
+# Collect values together with their original text and source positions.
+numbr.extractNumericEntities("She placed 2nd with 1.05 points")
+# [NumericMatch(text='2nd', value=2, representation='Ordinal Number', ...),
+#  NumericMatch(text='1.05', value=Decimal('1.05'), representation='Decimal Number', ...)]
+
+# Rewrite recognized expressions without changing the surrounding sentence.
+numbr.normalizeNumericText("She placed forty-second with 1.20e3 points")
+# "She placed 42nd with 1200 points"
+
+# Apply one conversion to several values.
+numbr.batchCast(["one", "2", "III"], "Cardinal Number")
+# [1, 2, 3]
+```
+
+The `Decimal(...)` text shown above is Python's representation of the returned
+value; the quick-start example does not need to import `Decimal`.
+
+## Choosing the right API
+
+| Goal | API | Result |
+|---|---|---|
+| Identify how one value is written | `Type(value)` | A representation name such as `"Ordinal Word"`, or `None` |
+| Convert one value | `Cast(value, target)` | The value in the requested representation |
+| Collect only values from text | `extractNumericValue(text)` | A list of normalized `int` or `Decimal` values |
+| Collect values and source details | `extractNumericEntities(text)` | A list of `NumericMatch` records with text, type, value, and position |
+| Rewrite numbers inside text | `normalizeNumericText(text)` | A new string with recognized expressions normalized |
+| Explain why parsing failed | `diagnoseNumeric(value)` | A `ParseResult` containing either a value or structured diagnostics |
+| Convert many inputs | `batchCast(values, target)` | A list of converted values using the selected error policy |
+| Diagnose many inputs | `batchDiagnose(values, target)` | One index-stable `ParseResult` per input |
+
+Conversion operates on one numeric value. Extraction searches a larger string
+and returns the numbers it contains. Normalization also searches a larger
+string, but returns rewritten text instead of match records.
+
+## Exact decimal values
+
+Decimal parsing returns [`decimal.Decimal`](https://docs.python.org/3/library/decimal.html#decimal.Decimal)
+instead of `float`. `Decimal` is part of Python's standard library; it is not an
+additional dependency. This avoids binary floating-point rounding and preserves
+meaningful fractional zeros such as the final zero in `"1.050"`.
+
+No `Decimal` import is required when the input is a string:
+
+```python
+import numbr
+
+value = numbr.Cast("1.050", "Decimal Number")
+
+value
+# Decimal("1.050")
+
+numbr.Cast(value, "Cardinal Word")
+# "one point zero five zero"
+```
+
+Import `Decimal` only when application code needs to construct a decimal value
+directly or perform decimal arithmetic:
+
+```python
+from decimal import Decimal
+
+import numbr
+
+numbr.decimalToAccounting(Decimal("-1234.50"), currency="$")
+# "($1,234.50)"
+```
+
 ## Representations
 
-| Representation | Examples | `Type` result |
-|---|---|---|
-| Cardinal number | `42`, `"-42"` | `"Cardinal Number"` |
-| Decimal number | `"1.05"`, `Decimal("1.050")` | `"Decimal Number"` |
-| Scientific number | `"1.20e3"`, `"-4E-2"` | `"Scientific Number"` |
-| Accounting number | `"(1,234.50)"`, `"($50.00)"` | `"Accounting Number"` |
-| Cardinal word | `"forty-two"` | `"Cardinal Word"` |
-| Ordinal number | `"42nd"` | `"Ordinal Number"` |
-| Ordinal word | `"forty-second"` | `"Ordinal Word"` |
-| Roman numeral | `"XLII"`, `"Ⅳ"` | `"Roman Numeral"` |
+| Representation | Meaning | Examples | `Type` result |
+|---|---|---|---|
+| Cardinal number | A whole-number quantity written with digits | `42`, `"-42"` | `"Cardinal Number"` |
+| Decimal number | A fixed-point value with a fractional part | `"1.05"`, `Decimal("1.050")` | `"Decimal Number"` |
+| Scientific number | A coefficient multiplied by a power of ten | `"1.20e3"`, `"-4E-2"` | `"Scientific Number"` |
+| Accounting number | A formatted business value whose parentheses indicate a negative amount | `"(1,234.50)"`, `"($50.00)"` | `"Accounting Number"` |
+| Cardinal word | A quantity written with English words | `"forty-two"` | `"Cardinal Word"` |
+| Ordinal number | A position or rank written with digits and a suffix | `"42nd"` | `"Ordinal Number"` |
+| Ordinal word | A position or rank written with English words | `"forty-second"` | `"Ordinal Word"` |
+| Roman numeral | A value written with Roman symbols | `"XLII"`, `"Ⅳ"` | `"Roman Numeral"` |
 
 Decimal phrases such as `"one point zero five"` are cardinal-word forms. Digits
 following `point` are interpreted individually so precision and trailing zeros
 are preserved.
+
+English-word parsing is intended for numeric expressions, not unrestricted
+natural-language interpretation. Surrounding prose should be passed to an
+extraction or normalization API rather than directly to `Type` or `Cast`.
 
 `Cast` accepts the display names and common aliases such as `int`, `decimal`,
 `scientific`, `accounting`, `cardword`, `ordnum`, and `roman`.
