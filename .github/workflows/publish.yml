@@ -9,11 +9,29 @@ permissions:
 
 jobs:
   check-version:
-    name: Check whether version is already published
+    name: Validate release and check whether version is already published
     runs-on: ubuntu-latest
     outputs:
       exists: ${{ steps.pypi.outputs.exists }}
     steps:
+      - name: Validate release metadata
+        shell: bash
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_TITLE: ${{ github.event.release.name }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          if [[ "$RELEASE_TITLE" != "$TAG_NAME" ]]; then
+            echo "Release title must match tag ${TAG_NAME}." >&2
+            exit 1
+          fi
+
+          first_line=$(printf '%s\n' "$RELEASE_BODY" | sed -n '/[^[:space:]]/{p;q;}')
+          if [[ "$first_line" != '> [!NOTE]' ]]; then
+            echo "Release description must begin with a NOTE callout, not a version heading." >&2
+            exit 1
+          fi
+
       - name: Check PyPI for the tagged version
         id: pypi
         shell: bash
