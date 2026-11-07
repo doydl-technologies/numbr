@@ -393,9 +393,9 @@ ruff check .
 python -m build
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md),
-[CHANGELOG.md](CHANGELOG.md), and [RELEASING.md](RELEASING.md) for project
-policies, release history, and the maintainer release procedure.
+See [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and
+[CHANGELOG.md](CHANGELOG.md) for contribution guidelines, the security policy,
+and release history.
 
 ## License
 

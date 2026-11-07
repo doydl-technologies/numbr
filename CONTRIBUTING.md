@@ -31,6 +31,3 @@ python -m twine check dist/*
 
 Add regression tests for behavior changes. Keep public API changes documented in
 `README.md` and `CHANGELOG.md`.
-
-Maintainers should follow [RELEASING.md](RELEASING.md) when preparing a GitHub
-and PyPI release.
