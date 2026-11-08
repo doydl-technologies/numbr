@@ -26,7 +26,7 @@ jobs:
             exit 1
           fi
 
-          first_line=$(printf '%s\n' "$RELEASE_BODY" | sed -n '/[^[:space:]]/{p;q;}')
+          first_line=$(printf '%s\n' "$RELEASE_BODY" | sed -n '/[^[:space:]]/{s/\r$//;p;q;}')
           if [[ "$first_line" != '> [!NOTE]' ]]; then
             echo "Release description must begin with a NOTE callout, not a version heading." >&2
             exit 1
