@@ -634,15 +634,15 @@ python -m build
 
 ### 📚 Contributor resources
 
-- 🤝 [Contribution guidelines](CONTRIBUTING.md)
-- 🔐 [Security policy](SECURITY.md)
-- 🕘 [Release history](CHANGELOG.md)
+- 🤝 [Contribution guidelines](https://github.com/doydl-technologies/numbr/blob/main/CONTRIBUTING.md)
+- 🔐 [Security policy](https://github.com/doydl-technologies/numbr/blob/main/SECURITY.md)
+- 🕘 [Release history](https://github.com/doydl-technologies/numbr/blob/main/CHANGELOG.md)
 
 ---
 
 ## ⚖️ License
 
-Licensed under the [MIT License](LICENSE).
+Licensed under the [MIT License](https://github.com/doydl-technologies/numbr/blob/main/LICENSE).
 
 ---
 

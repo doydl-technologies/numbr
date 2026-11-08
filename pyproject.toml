@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "numbr"
-version = "3.3.4"
+version = "3.6.5"
 description = "Parse, diagnose, batch-convert, extract, and normalize English numbers, exact decimals, scientific and accounting notation, and Roman numerals."
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
